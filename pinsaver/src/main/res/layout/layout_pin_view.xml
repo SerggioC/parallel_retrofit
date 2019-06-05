@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:pin="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_marginTop="@dimen/fragment_padding"
+    pin:cardBackgroundColor="@color/white"
+    pin:cardCornerRadius="16dp"
+    pin:cardElevation="16dp"
+    pin:layout_constraintWidth_max="350dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        pin:layout_constraintWidth_max="350dp">
+
+        <TextView
+            android:id="@+id/pin_header_label"
+            style="@style/LightIfPossible"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="8dp"
+            android:textAlignment="center"
+            android:textColor="@color/pin_gray"
+            android:textSize="@dimen/pin_header_label_size"
+            pin:layout_constraintBottom_toTopOf="@+id/pin_pinputview"
+            pin:layout_constraintEnd_toEndOf="parent"
+            pin:layout_constraintStart_toStartOf="parent"
+            pin:layout_constraintTop_toTopOf="parent" />
+
+        <com.venmo.android.pin.view.PinputView
+            android:id="@+id/pin_pinputview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/pin_header_label"
+            android:layout_marginBottom="8dp"
+            android:cursorVisible="false"
+            android:textSize="@dimen/pinputview_default_text_size"
+            pin:layout_constraintBottom_toTopOf="@+id/pin_keyboard"
+            pin:layout_constraintEnd_toEndOf="parent"
+            pin:layout_constraintStart_toStartOf="parent"
+            pin:pinputview_backgroundColor="@color/pin_light_gray_50"
+            pin:pinputview_foregroundColor="@color/pin_orange" />
+
+        <ProgressBar
+            android:id="@+id/pin_progress_spinner"
+            android:layout_width="@dimen/pin_view_progressbar_size"
+            android:layout_height="@dimen/pin_view_progressbar_size"
+            android:layout_alignTop="@id/pin_pinputview"
+            android:visibility="invisible"
+            pin:layout_constraintBottom_toBottomOf="@+id/pin_pinputview"
+            pin:layout_constraintEnd_toEndOf="@+id/pin_pinputview"
+            pin:layout_constraintStart_toStartOf="@+id/pin_pinputview"
+            pin:layout_constraintTop_toTopOf="@+id/pin_pinputview"
+            tools:visibility="visible" />
+
+        <com.venmo.android.pin.view.PinKeyboardView
+            android:id="@+id/pin_keyboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/pin_pinputview"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/transparent"
+            pin:layout_constraintBottom_toBottomOf="parent"
+            pin:layout_constraintEnd_toEndOf="parent"
+            pin:layout_constraintStart_toStartOf="parent"
+            pin:pinkeyboardview_keyBackground="@drawable/pin_key_selector"
+            pin:pinkeyboardview_textColor="@color/pin_orange" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</androidx.cardview.widget.CardView>
+
