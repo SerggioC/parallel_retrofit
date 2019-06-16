@@ -4,16 +4,21 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.viewpager.widget.ViewPager
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.tabs.TabLayout
 import com.sergiocruz.parallelretrofit.api.ApiController
+import com.sergiocruz.parallelretrofit.api.UserDao
+import com.sergiocruz.parallelretrofit.api.UsersDatabase
 import com.sergiocruz.parallelretrofit.ui.main.SectionsPagerAdapter
-import com.venmo.android.pin.*
+import com.venmo.android.pin.PinFragment
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.*
+import java.lang.ref.WeakReference
 
 
-class MainActivity : AppCompatActivity(), PinListener {
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var pinFragment: PinFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,22 +26,105 @@ class MainActivity : AppCompatActivity(), PinListener {
 
         val sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager)
 
-        val viewPager: ViewPager = findViewById(R.id.view_pager)
-        viewPager.adapter = sectionsPagerAdapter
+        view_pager.adapter = sectionsPagerAdapter
 
-        val tabs: TabLayout = findViewById(R.id.tabs)
-        tabs.setupWithViewPager(viewPager)
-
-        val fab: FloatingActionButton = findViewById(R.id.fab)
+        tabs.setupWithViewPager(view_pager)
 
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
 
-        pinIt()
+//        pinFragment = PinFragment.checkPin(null, null)
+//
+//        pinFragment.observable.observeForever({ pin: String ->
+//            Log.i("Sergio> ", "I observed this pin: $pin")
+//        })
+
+
+        Log.w("Sergio> ", "creating Activity")
+
+        val fragment = supportFragmentManager.findFragmentByTag(PinFragment::class.java.simpleName)
+
+        if (fragment is PinFragment) {
+            //handleAttach(fragment)
+        } else {
+            // something else
+        }
+
+//        val dao: UserDao = UsersDatabase.getInstance(this).userDao()
+//
+//        GlobalScope.launch {
+//            val cenas = dao.getMeCenas()
+//        }
+
+
 
     }
+
+    /*** on child fragment attached ***/
+    override fun onAttachFragment(fragment: Fragment?) {
+        super.onAttachFragment(fragment)
+
+        if (fragment is PinFragment)
+            handleAttach(fragment)
+    }
+
+    val config = true
+
+    private fun handleAttach(fragment: Fragment?) {
+        val dismissCallback: WeakReference<(() -> Unit)?>? = WeakReference {
+            Log.i("Sergio> ", "dismissedpinfragment")
+            Unit
+        }
+
+        if (fragment is PinFragment) {
+            if (config) {
+                fragment.creatorCallback = WeakReference { newPin ->
+                    if (newPin.isNullOrEmpty().not()) {
+                        /// save the $newPin in DB
+
+                        runBlocking {
+                            delay(2000)
+                        }
+
+                        //error("bug!")
+
+                        false
+                    } else {
+                        // do something else
+
+                        false
+                    }
+
+                }
+            } else {
+                val function = WeakReference { inputPin: String ->
+                    val timer = System.currentTimeMillis()
+                    val tn = Thread.currentThread().name
+
+
+                    runBlocking {
+                        // check the DB
+                        delay(2000)
+                    }
+
+                    val savedPin = "1111"
+                    val elapsed = System.currentTimeMillis() - timer
+                    Log.i("Sergio> ", "delay done time: $elapsed threadName: $tn")
+                    inputPin == savedPin
+                }
+                fragment.validatorCallback = function
+            }
+            fragment.dismissCallback = dismissCallback
+        }
+
+    }
+
+//    override fun onRetainCustomNonConfigurationInstance(): Any {
+//        return super.onRetainCustomNonConfigurationInstance()
+//
+//    }
 
     data class User(
         val userId: Int,
@@ -46,65 +134,15 @@ class MainActivity : AppCompatActivity(), PinListener {
         val pin: String
     )
 
-
-    private fun getAsyncConfig(): PinFragmentConfiguration? {
-        return PinFragmentConfiguration(this)
-            .pinSaver(object : AsyncSaver {
-                override fun save(pin: String?) {
-                    val threadName = Thread.currentThread().name
-                    Log.i("Sergio> ", "validated $pin $threadName")
-                }
-
-            }).validator(object : AsyncValidator {
-                override fun isValid(input: String): Boolean {
-                    val threadName = Thread.currentThread().name
-                    Log.i("Sergio> ", "entered $input $threadName")
-                    return true
-                }
-            })
-    }
-
-    private fun getSyncConfig(): PinFragmentConfiguration? {
-        return PinFragmentConfiguration(this)
-            .pinSaver { pin ->
-                val threadName = Thread.currentThread().name
-                Log.i("Sergio> ", "validated $pin $threadName")
-
-            }.validator { input ->
-                val threadName = Thread.currentThread().name
-                Log.i("Sergio> ", "entered $input $threadName")
-                true
-
-            }
-    }
-
-
-    fun pinIt() {
-
-
-        val asyncConfig = getAsyncConfig()
-
-        val toShow = if (false)
-            PinFragment.newInstanceForVerification(asyncConfig)
-        else
-            PinFragment.newInstanceForCreation(asyncConfig)
-
-        supportFragmentManager.beginTransaction()
-            .replace(android.R.id.content, toShow)
-            .commit()
-    }
-
-    override fun onValidated() {
-        Log.i("Sergio> ", "validated")
-    }
-
-    override fun onPinCreated() {
-        Log.i("Sergio> ", "created")
-    }
-
-
     override fun onBackPressed() {
-        //super.onBackPressed()
+        val fragment = supportFragmentManager.findFragmentByTag(PinFragment::class.java.simpleName)
+
+        if (fragment is PinFragment) {
+            fragment.dismiss()
+            return
+        }
+
+        super.onBackPressed()
         ApiController.dispatcher.cancelAll()
         Toast.makeText(this, "canceled", Toast.LENGTH_SHORT).show()
 

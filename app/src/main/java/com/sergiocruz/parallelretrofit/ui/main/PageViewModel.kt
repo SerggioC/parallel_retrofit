@@ -1,17 +1,17 @@
 package com.sergiocruz.parallelretrofit.ui.main
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
-import androidx.lifecycle.ViewModel
-import com.sergiocruz.parallelretrofit.api.ApiController
+import android.app.Application
+import androidx.lifecycle.*
+import com.sergiocruz.parallelretrofit.api.*
 import com.sergiocruz.parallelretrofit.model.Post
 import com.sergiocruz.parallelretrofit.model.User
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class PageViewModel : ViewModel() {
+class PageViewModel constructor (application: Application) : AndroidViewModel(application) {
+
+    private val controller2 = ApiController2(application).getInstance()
 
     private val _index = MutableLiveData<Int>()
     val text: LiveData<String> = Transformations.map(_index) {
@@ -25,12 +25,14 @@ class PageViewModel : ViewModel() {
     @Synchronized
     fun updateCounter() = ++counter
 
+
+
     @Volatile
     var counter = 0
 
     fun getUserFromAPI(callback: ((Int) -> Unit)?) {
-        ApiController
-            .controller
+
+        controller2
             .getUsers()
             .enqueue(object : Callback<List<User>?> {
                 override fun onResponse(call: Call<List<User>?>, response: Response<List<User>?>) {
@@ -50,8 +52,8 @@ class PageViewModel : ViewModel() {
         index: Int,
         callback: ((Boolean, Int) -> Unit)?
     ) {
-        ApiController
-            .controller
+
+        controller2
             .getUsers()
             .enqueue(object : Callback<List<User>?> {
                 override fun onResponse(call: Call<List<User>?>, response: Response<List<User>?>) {
@@ -69,11 +71,33 @@ class PageViewModel : ViewModel() {
             })
     }
 
-
     private val userList = MutableLiveData<List<User>>()
     fun getUsers(): LiveData<List<User>> {
         getUserFromAPI(null)
         return userList
+    }
+
+    private val userList2 = MutableLiveData<List<User>>()
+    fun getUsers2(): LiveData<List<User>> {
+        getUserFromAPI2(null)
+        return userList2
+    }
+
+
+    fun getUserFromAPI2(callback: ((Int) -> Unit)?) {
+        controller2
+            .getUsers()
+            .enqueue(object : Callback<List<User>?> {
+                override fun onResponse(call: Call<List<User>?>, response: Response<List<User>?>) {
+                    userList2.value = response.body()
+                    callback?.invoke(updateCounter())
+                }
+
+                override fun onFailure(call: Call<List<User>?>, t: Throwable) {
+                    userList2.value = null
+                    callback?.invoke(updateCounter())
+                }
+            })
     }
 
     /*** Parallel execution ***/
@@ -95,7 +119,7 @@ class PageViewModel : ViewModel() {
 
     fun getPostsFromUser(userId: Int, update: (List<Post>?) -> Unit) {
 
-        ApiController.controller.getPostByUserId(userId).enqueue(object : Callback<List<Post>?> {
+        controller2.getPostByUserId(userId).enqueue(object : Callback<List<Post>?> {
             override fun onResponse(call: Call<List<Post>?>, response: Response<List<Post>?>) {
                 update(response.body())
             }

@@ -1,6 +1,8 @@
 package com.sergiocruz.parallelretrofit.ui.main
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +14,9 @@ import androidx.lifecycle.ViewModelProviders
 import com.sergiocruz.parallelretrofit.R
 import com.sergiocruz.parallelretrofit.model.Post
 import com.sergiocruz.parallelretrofit.model.User
+import com.venmo.android.pin.PinFragment
 import kotlinx.android.synthetic.main.fragment_main.*
+import kotlinx.coroutines.*
 
 /**
  * A placeholder fragment containing a simple view.
@@ -43,11 +47,22 @@ class PlaceholderFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         button.setOnClickListener {
             pageViewModel.getUsers().observe(this, Observer<List<User>?> {
                 toastThis("DONE getting users: ${it?.size}")
             })
         }
+
+        button2.setOnClickListener {
+            pageViewModel.getUsers2().observe(this, Observer<List<User>?> {
+                toastThis("DONE getting users 2: ${it?.size}")
+            })
+        }
+
+
+
+
 
         buttonMultiRequest.setOnClickListener {
             val initial = System.currentTimeMillis()
@@ -64,6 +79,10 @@ class PlaceholderFragment : Fragment() {
                 }
             }
         }
+
+
+
+
 
         buttonSequential.setOnClickListener {
             val initial = System.currentTimeMillis()
@@ -102,7 +121,10 @@ class PlaceholderFragment : Fragment() {
         buttonSequentialGetPosts.setOnClickListener {
             val list = (0..10).toList()
             val start = System.currentTimeMillis()
-            pageViewModel.getPostsFromUserListSequential(list, 0) { done: Boolean, index: Int, postList: List<Post>? ->
+            pageViewModel.getPostsFromUserListSequential(
+                list,
+                0
+            ) { done: Boolean, index: Int, postList: List<Post>? ->
                 textViewSeuentialGetPosts.text = index.toString()
                 if (done) {
                     val time = System.currentTimeMillis() - start
@@ -111,6 +133,118 @@ class PlaceholderFragment : Fragment() {
             }
         }
 
+        buttonCoroutine.setOnClickListener {
+            //lauunchCoroutine()
+        }
+
+        buttonPin.setOnClickListener {
+            pinOnAttach()
+        }
+
+    }
+
+    private val config = false
+
+    private fun pinOnAttach() {
+
+        val pinFragment = if (config) {
+            PinFragment.newCreatorInstance()
+        } else {
+            PinFragment.newCheckingInstance()
+        }
+//
+//        childFragmentManager.beginTransaction()
+//            .add(R.id.constraintLayout, pinFragment)
+//            .commit()
+
+        activity?.supportFragmentManager?.beginTransaction()
+            ?.replace(android.R.id.content, pinFragment, PinFragment::class.java.simpleName)
+            ?.commit()
+    }
+
+    /*** on attach child fragment ***/
+    override fun onAttachFragment(fragment: Fragment?) {
+        super.onAttachFragment(fragment)
+//        handleAttach(fragment)
+    }
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+    }
+
+
+    private fun pin() {
+
+        val dismissCallback: () -> Unit = {
+
+        }
+
+        val config = true
+        val pinFragment = if (config) {
+            PinFragment.checkPin(
+                { inputPin: String ->
+
+                    val timer = System.currentTimeMillis()
+
+                    val tn = Thread.currentThread().name
+
+                    // check the DB
+                    val savedPin = "1111"
+
+
+                    runBlocking {
+                        delay(2000)
+                    }
+
+                    val elapsed = System.currentTimeMillis() - timer
+
+                    Log.i("Sergio> ", "delay done time: $elapsed threadName: $tn")
+                    inputPin == savedPin
+                },
+                dismissCallback
+            )
+        } else {
+            PinFragment.createPin(
+                { newPin ->
+                    if (newPin.isNullOrEmpty().not()) {
+                        /// save the $newPin in DB
+
+                        runBlocking {
+                            delay(2000)
+                        }
+
+                        //error("bug!")
+
+                        false
+                    } else {
+                        // do something else
+
+                        false
+                    }
+
+                },
+                dismissCallback
+            )
+        }
+
+
+
+        activity?.supportFragmentManager?.beginTransaction()
+            ?.replace(android.R.id.content, pinFragment)
+            ?.commit()
+
+    }
+
+
+    fun lauunchCoroutine(): Unit {
+        GlobalScope.launch(Dispatchers.Main) {
+            // launch coroutine in the main thread
+            for (i in 10 downTo 1) { // countdown from 10 to 1
+                section_label.text = "Countdown $i ..." // update text
+                delay(500) // wait half a second
+            }
+            section_label.text = "Done!"
+        }
     }
 
 
